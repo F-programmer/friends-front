@@ -11,3 +11,5 @@
 -  rode "yarn dev", se voce tiver o yarn, ou "npm run dev", caso nao tenha o yarn
 -  acesse "localhost:3000" no seu navegador preferido
 -  be happy : )
+
+☕
