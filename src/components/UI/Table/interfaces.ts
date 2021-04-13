@@ -10,6 +10,7 @@ export interface UITableRow {
 export interface UITableProps {
 	data?: UITableRow[];
 	bordered?: boolean;
+	header: UITableRow;
 }
 export interface ChangesButtonParams {
 	name: string;
@@ -17,7 +18,6 @@ export interface ChangesButtonParams {
 }
 
 export interface TableSetup {
-	header: UITableRow | { row: [] };
 	names: any;
 	allRows: UITableRow[] | [];
 	totalRows: number;

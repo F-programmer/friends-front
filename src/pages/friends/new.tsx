@@ -1,3 +1,4 @@
+// libs
 import React, { useEffect, useState } from "react";
 import {
 	Box,
@@ -9,23 +10,28 @@ import {
 	DialogContent,
 } from "@material-ui/core";
 
-import UIInput from "components/UI/Input";
-import UIButton from "components/UI/Button/index";
-import UIText from "components/UI/Text/index";
-import UIAutocomplete from "components/UI/Autocomplete/index";
-
-import api from "api/index";
+// components
+import { UIInput, UIButton, UIText, UIAutocomplete } from "components/UI";
 
 import { useFormik } from "formik";
-import { GenerateFormikField } from "utils/pages";
+import { GenerateFormikField, getOnlyOneError } from "utils/pages";
 import * as yup from "yup";
 
+// icons
 import { FaUserAlt } from "react-icons/fa";
+
+// shared
+import { useRouter } from "next/router";
+import api from "api/index";
 
 const validationSchema = yup.object().shape({
 	name: yup.string().required("Insira o nome"),
 	birthDate: yup.string().required("Selecione uma data"),
-	preferedColor: yup.mixed().required("Selecione uma opção"),
+	preferedColor: yup.object().shape({
+		code: yup.string().required("Selecione uma opção"),
+		id_color: yup.string().required("Selecione uma opção"),
+		name_color: yup.string().required("Selecione uma opção"),
+	}),
 });
 
 interface Color {
@@ -33,7 +39,6 @@ interface Color {
 	name: string;
 	code: string;
 }
-
 interface FormikValues {
 	name: string;
 	birthDate: string;
@@ -41,19 +46,16 @@ interface FormikValues {
 }
 
 export default function NewFriend() {
-	const [dbData, setDbData] = useState({
-		colors: [],
-		foods: [],
-	});
-	const [openModal, setOpenModal] = useState(false);
-	const [openDialog, setOpenDialog] = useState(null);
+	const router = useRouter();
+	const idFriend = String(router.query.id || "");
+
+	const [editing, setEditing] = useState<any>(null);
 
 	const initialValues: FormikValues = {
 		name: "",
 		birthDate: "",
 		preferedColor: {},
 	};
-
 	const {
 		values,
 		errors,
@@ -72,11 +74,19 @@ export default function NewFriend() {
 				const data = new FormData();
 				Object.keys(fields).forEach((key) => data.append(key, fields[key]));
 				data.append("preferedColor", fields.preferedColor.id_color);
-				const result = await api.post(`friends/post.php`, data);
-				console.log(result);
-				if (Boolean(result.data)) {
-					setOpenDialog("Usuário cadastrado com sucesso!!");
-					resetForm();
+				if (!editing) {
+					const result = await api.post(`friends/post.php`, data);
+					if (Boolean(result.data)) {
+						setOpenDialog("Usuário cadastrado com sucesso!!");
+						resetForm();
+					}
+				} else {
+					data.append("idUser", editing.id);
+					const result = await api.post(`friends/update.php`, data);
+					if (Boolean(result.data)) {
+						setOpenDialog("Usuário alterado com sucesso!!");
+						resetForm();
+					}
 				}
 			} catch (err) {
 				setOpenDialog("Operação cancelada, erro interno do servidor");
@@ -86,7 +96,6 @@ export default function NewFriend() {
 			}
 		},
 	});
-
 	const formikConfig = {
 		values,
 		errors,
@@ -95,6 +104,47 @@ export default function NewFriend() {
 		handleBlur,
 		setFieldValue,
 	};
+
+	useEffect(() => {
+		const getEditing = async () => {
+			if (idFriend) {
+				const result = await api.get(`friends/find.php`, {
+					params: { idFriend },
+				});
+				if (result.data) {
+					const data = result.data;
+					if (data.length > 0) {
+						const user = data[0];
+						const colorResult = await api.get(`/colors/find.php`, {
+							params: { idColor: user.favorite_color },
+						});
+
+						if (colorResult) {
+							const colorData = colorResult.data;
+
+							if (colorData.length > 0) {
+								setEditing({
+									...user,
+									...colorData[0],
+								});
+								setFieldValue("name", user.name);
+								setFieldValue("birthDate", user.birth_date);
+								setFieldValue("preferedColor", colorData[0]);
+							}
+						}
+					}
+				}
+			}
+		};
+		getEditing();
+	}, [idFriend]);
+
+	const [dbData, setDbData] = useState({
+		colors: [],
+		foods: [],
+	});
+	const [openModal, setOpenModal] = useState(false);
+	const [openDialog, setOpenDialog] = useState(null);
 
 	useEffect(() => {
 		const getData = async () => {
@@ -155,6 +205,17 @@ export default function NewFriend() {
 											"setFieldValue"
 										)}
 										items={dbData.colors || []}
+										onChange={(value: any) => {
+											formikConfig.setFieldValue(
+												"preferedColor",
+												value.target.value ?? {}
+											);
+										}}
+										error={
+											errors.preferedColor && touched.preferedColor
+												? getOnlyOneError(errors, "preferedColor")
+												: ""
+										}
 										renderOption={(option) => (
 											<Grid
 												container
@@ -175,7 +236,9 @@ export default function NewFriend() {
 									/>
 								</Grid>
 								<Grid item xs={12}>
-									<UIButton onClick={handleSubmit}>Cadastrar</UIButton>
+									<UIButton onClick={handleSubmit}>
+										{editing ? "Editar" : "Cadastrar"}
+									</UIButton>
 								</Grid>
 							</Grid>
 						</Box>
@@ -192,7 +255,7 @@ export default function NewFriend() {
 				onClose={() => setOpenDialog(null)}
 			>
 				<Box p={4}>
-					<DialogTitle id="simple-dialog-title">
+					<DialogTitle>
 						<UIText color="var(--primary)" size="20px">
 							{openDialog}
 						</UIText>

@@ -9,11 +9,7 @@ interface UISearchProps extends UIInputProps {
 	btnText: string;
 }
 
-export default function UISearch({
-	btnText,
-	onSearch = () => {},
-	...props
-}: UISearchProps) {
+function UISearch({ btnText, onSearch = () => {}, ...props }: UISearchProps) {
 	return (
 		<Grid container>
 			<Grid item xs>
@@ -25,3 +21,6 @@ export default function UISearch({
 		</Grid>
 	);
 }
+
+export default UISearch;
+export { UISearch };

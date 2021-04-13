@@ -10,7 +10,7 @@ interface UITextProps extends FuncProps {
 	cursor?: string;
 }
 
-export default function UIText({
+function UIText({
 	children,
 	textcolor = "var(--text)",
 	size = "14px",
@@ -28,3 +28,5 @@ export default function UIText({
 		</StyledTypography>
 	);
 }
+export default UIText;
+export { UIText };

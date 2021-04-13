@@ -4,7 +4,7 @@ import { StyledButton } from "./styles";
 
 import { UIButtonProps } from "./interfaces";
 
-export default function UIButton({
+function UIButton({
 	fullWidth = true,
 	type = "button",
 	onClick = () => {},
@@ -21,3 +21,6 @@ export default function UIButton({
 		</StyledButton>
 	);
 }
+
+export default UIButton;
+export { UIButton };

@@ -1,5 +1,5 @@
 import React from "react";
-import { FormControl, InputAdornment } from "@material-ui/core";
+import { FormControl, InputAdornment, FormHelperText } from "@material-ui/core";
 
 import {
 	StyledInputBase,
@@ -29,6 +29,8 @@ function UIInput({
 		""
 	);
 
+	console.log(props.error);
+
 	return (
 		<FormControl error={props.error ? true : false} fullWidth={fullWidth}>
 			{props.label ? (
@@ -51,14 +53,9 @@ function UIInput({
 					onChange={onChange}
 				/>
 			)}
-			<StyledMessage messageType={props.error ? "error" : props.messageType}>
-				{props.error
-					? props.error
-					: props.success
-					? props.success
-					: props.message}
-			</StyledMessage>
+			<FormHelperText>{props.error}</FormHelperText>
 		</FormControl>
 	);
 }
 export default UIInput;
+export { UIInput };

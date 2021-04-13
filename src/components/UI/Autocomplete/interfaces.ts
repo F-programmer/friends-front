@@ -12,5 +12,6 @@ export interface UIAutocompleteProps {
 	onChange?: any;
 	disabled?: boolean;
 	getOptionLabel?: (option?: ACItem) => any;
+	error?: string;
 	[propName: string]: any;
 }

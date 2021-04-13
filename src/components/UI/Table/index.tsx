@@ -4,7 +4,6 @@ const StyledBox = dynamic(() => import("./styles"), { ssr: false });
 
 import React, { useState, useEffect } from "react";
 import {
-	Box,
 	Grid,
 	TableBody,
 	TableHead,
@@ -18,54 +17,30 @@ import { StyledTableCell, StyledTableRow } from "./styles";
 
 import { UITableProps, TableSetup, UITableRow } from "./interfaces";
 
-import { fakeRows } from "utils/fake";
-
-export default function UITable({ data, bordered = false }: UITableProps) {
+function UITable({ data, bordered = false, header }: UITableProps) {
 	const [tableSetup, setTableSetup] = useState<TableSetup>({
 		allRows: [],
-		header: { row: [] },
 		names: {},
-		totalRows: 1, //Math.ceil(tableSetup.allRows.length / parseInt(tableSetup.byPage))
+		totalRows: 1,
 	});
 
 	const byPage = 50;
 
 	useEffect(() => {
-		let workWith: UITableRow[];
-
-		if (data && data !== undefined && data !== null && data.length > 0)
-			workWith = data;
-		else
-			workWith = fakeRows(1000, [{ type: "string" }, { type: "integer" }], {
-				row: [
-					{ children: "Doces", disponibility: true, name: "candys" },
-					{
-						children: "Quantidade",
-						disponibility: true,
-						name: "quantities",
-					},
-				],
-				header: true,
+		if (data && data !== undefined && data !== null && data.length > 0) {
+			let workWith: UITableRow[] = data;
+			// e os names para filtrar
+			const names = {};
+			header.row.forEach((item, index) => (names[item.name] = index));
+			// allRows = todas as linhas possiveis
+			let totalRows = workWith.length / byPage;
+			if (parseInt(totalRows.toFixed(0)) < totalRows) totalRows += 1;
+			setTableSetup({
+				allRows: workWith,
+				names,
+				totalRows: parseInt(totalRows.toFixed(0)),
 			});
-
-		// pegando o cabecalho
-		const header: UITableRow = workWith.filter(
-			(item) => item.header === true
-		)[0];
-		// e os names para filtrar
-		const names = {};
-		header.row.forEach((item, index) => (names[item.name] = index));
-		// removendo os cabecalhos das demais linhas
-		workWith.splice(workWith.indexOf(header), 1);
-		// allRows = todas as linhas possiveis
-		let totalRows = workWith.length / byPage;
-		if (parseInt(totalRows.toFixed(0)) < totalRows) totalRows += 1;
-		setTableSetup({
-			allRows: workWith,
-			header,
-			names,
-			totalRows: parseInt(totalRows.toFixed(0)),
-		});
+		}
 	}, [data]);
 
 	return (
@@ -76,7 +51,7 @@ export default function UITable({ data, bordered = false }: UITableProps) {
 						<Table>
 							<TableHead>
 								<TableRow>
-									{tableSetup.header.row.map(({ ...item }, index) => (
+									{header.row.map(({ ...item }, index) => (
 										<TableCell key={index}>{item.children}</TableCell>
 									))}
 								</TableRow>
@@ -103,3 +78,7 @@ export default function UITable({ data, bordered = false }: UITableProps) {
 		</Grid>
 	);
 }
+
+export default UITable;
+export { UITable };
+export * from "./interfaces";
